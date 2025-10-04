@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery List Manager</title>
+  <!-- Bootstrap 3.4.1 -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .card {
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .header-icon {
+      font-size: 40px;
+      /* color: #337ab7; */
+      color: white;
+    }
+    .header-container {
+            background: linear-gradient(135deg, #6f42c1, #fd7e14);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .grocery-item {
+      transition: all 0.3s ease;
+      border-left: 4px solid #6f42c1;
+      border-right: 4px solid #6f42c1;
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      background:  whitesmoke;
+      /* list-style-type: none; removes bullets */
+    }
+    .grocery-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    .total-card{
+      background-color:  #e9ecef;
+      border-left: 4px solid #fd7e14;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    .btn-quantity {
+      width: 38px;
+    }
+    .empty-state {
+        margin-top: 20px;
+      display: none;
+      color: #777;
+    }
+    .tip-box {
+      background-color: #e9f5ff;
+      border-left: 4px solid #337ab7;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+
+    #quantity-badge {
+            min-width: 36px;
+        }
+  </style>
+</head>
+<body>
+  <div class="container" style="margin-top:40px;">
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <div class="card text-center">
+          <!-- Header -->
+          <div class="header-container text-center">
+            <span class="glyphicon glyphicon-shopping-cart header-icon"></span>
+            <h2>Grocery List</h2>
+            <p class="text-center">Manage your shopping list with ease</p>
+          </div>
+
+          <!-- Input Form -->
+          <form id="grocery-form" style="margin:20px 0;">
+            <div class="input-group input-group-lg">
+              <input type="text" class="form-control" placeholder="Enter grocery item..." id="grocery-input" required>
+              <span class="input-group-btn">
+                <button class="btn btn-primary" type="submit">
+                  <span class="glyphicon glyphicon-plus"></span> Add
+                </button>
+              </span>
+            </div>
+          </form>
+          <!-- Items list count -->
+          <div class="items-count-card text-left" id="items-count-list">
+            <span class="items-list-count text-muted" id="items-list-count">0</span><span class="items-list-count-text text-muted"> in your list.</span>
+            </div>
+          
+          <!-- Grocery List (unordered list) -->
+          <ul id="grocery-list" class="list-unstyled"></ul>
+          
+          <!-- Total Items to Buy -->
+          <div class="total-card" id="total-card" >
+            <strong class>Total Item to buy : </strong> <span bg-primary fs-6 quantity-badge id="total-items"> 0-items</span>
+          </div>
+          <!-- <div>
+            <span class="badge" id="total-items">0 items</span>
+          </div> -->
+
+          <!-- Empty State -->
+          <div class="empty-state text-center" id="empty-state">
+            <span class="glyphicon glyphicon-shopping-cart" style="font-size:40px; color: #777;"></span>
+            <p>Your grocery list is empty</p>
+            <p>Add items to get started</p>
+          </div>
+
+          <!-- Tip Box -->
+          <div class="tip-box">
+            <strong>Tip:</strong> Use the - and + buttons to adjust quantities, or the trash button to remove items.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  
+  <script>
+    var itemList = [];
+
+    function updateTotal() {
+      var total = itemList.reduce((sum, item) => sum + item.qty, 0);
+
+      document.getElementById("total-items").innerText = total + (total === 1 ? " item" : " items");
+      document.getElementById("empty-state").style.display = itemList.length === 0 ? "block" : "none";
+    }
+
+
+    function renderList() {
+      var groceryList = document.getElementById("grocery-list");
+      groceryList.innerHTML = "";
+
+      itemList.forEach((item, index) => {
+        var li = document.createElement("li");
+        li.className = "grocery-item";
+        li.innerHTML = `
+          <div class="row">
+            <div class="col-xs-2 text-left">
+              <button class="btn btn-default btn-quantity decrease-btn">
+                <span class="glyphicon glyphicon-minus"></span>
+              </button>
+            </div>
+            <div class="col-xs-6 text-center">
+              <strong>${item.name}</strong><br> 
+              <small class="text-muted">Qty: <span class="quantity">${item.qty}</span></small>
+            </div>
+            <div class="col-xs-4 text-right">
+              <button class="btn btn-primary btn-quantity increase-btn">
+                <span class="glyphicon glyphicon-plus"></span>
+              </button>
+              <button class="btn btn-danger btn-quantity delete-btn">
+                <span class="glyphicon glyphicon-trash"></span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        li.querySelector(".increase-btn").addEventListener("click", () => increaseQuantity(index));
+        li.querySelector(".decrease-btn").addEventListener("click", () => decreaseQuantity(index));
+        li.querySelector(".delete-btn").addEventListener("click", () => deleteItem(index));
+
+        groceryList.appendChild(li);
+      });
+      document.getElementById("items-list-count").innerText = itemList.length + (itemList.length === 0 ||itemList.length ==1 ? " Item" : " Items" );
+      updateTotal();
+    }
+
+    function addGroceryItem(name) {
+      itemList.push({ name: name, qty: 1 });
+      renderList();
+    }
+
+    function increaseQuantity(index) {
+      itemList[index].qty++;
+      renderList();
+    }
+
+    function decreaseQuantity(index) {
+      if (itemList[index].qty > 1) {
+        itemList[index].qty--;
+      } else {
+        itemList.splice(index, 1);
+      }
+      renderList();
+    }
+
+    function deleteItem(index) {
+      itemList.splice(index, 1);
+      renderList();
+    }
+
+    document.getElementById("grocery-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var input = document.getElementById("grocery-input");
+      var value = input.value.trim();
+      if (value) {
+        addGroceryItem(value);
+        input.value = "";
+      }
+    });
+
+    renderList();
+  </script>
+</body>
+</html>
